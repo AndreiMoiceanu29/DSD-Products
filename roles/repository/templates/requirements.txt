@@ -1,0 +1,6 @@
+grpcio-tools
+pymongo
+dnspython
+pylint
+protobuf
+requests

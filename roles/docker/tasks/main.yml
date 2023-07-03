@@ -1,0 +1,89 @@
+---
+
+- name: "Template docker-compose to Root Directory"
+  ansible.builtin.template:
+    src: docker-compose.yml
+    dest: "/home/{{local_user}}/docker-compose.yml"
+    owner: "{{local_user}}"
+
+
+- name: "Template Dockerfile to Root Directory"
+  ansible.builtin.template:
+    src: Dockerfile
+    dest: "/home/{{local_user}}/Dockerfile"
+    owner: "{{local_user}}"
+
+
+- name: Install required system packages
+  apt: name={{ item }} state=latest update_cache=yes
+  loop: [ 'apt-transport-https', 'ca-certificates', 'curl', 'software-properties-common']
+  become: true
+
+# - name: "Installing Rsync"
+#   apt: >
+#     pkg={{ item }}
+#     state=latest
+#     update_cache=yes
+#     cache_valid_time=3600
+#   with_items:
+#   - rsync
+
+- name: Add Docker GPG apt Key
+  apt_key:
+    url: https://download.docker.com/linux/debian/gpg
+    state: present
+
+- name: Add Docker Repository
+  apt_repository:
+    repo: deb https://download.docker.com/linux/debian buster stable
+    state: absent
+
+- name: Update apt and install docker-ce
+  apt: 
+    update_cache: yes 
+    name: docker-ce 
+    pkg:
+    - docker-ce 
+    - docker-ce-cli
+    - containerd.io 
+    state: latest
+
+- name: Install docker python module
+  pip:
+    name: 
+      - docker
+      - docker-compose
+
+
+- name: Ensure Docker service is started
+  service:
+    name: "docker"
+    state: started
+
+
+- name: Tear down existing services
+  community.docker.docker_compose:
+    project_src: "/home/{{local_user}}/"
+    state: absent
+  become: true
+
+
+- name: Prune containers
+  community.docker.docker_prune:
+    containers: yes
+    builder_cache: yes
+
+
+- name: Remove a volume
+  community.docker.docker_volume:
+    name: "{{local_user}}_backend_data"
+    state: absent
+
+
+- name: Run docker-compose
+  docker_compose:
+    project_src: "/home/{{local_user}}/"
+    files:
+      - docker-compose.yml
+    build: true
+  register: docker_reg

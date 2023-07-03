@@ -1,0 +1,51 @@
+---
+
+# - name: Install python3-venv
+#   apt:
+#     name: python3-venv
+#     state: present
+
+- name: Create service directory if it does not exist
+  ansible.builtin.file:
+    path: "/home/{{local_user}}/{{service_directory}}/"
+    state: directory
+    mode: '0755'
+
+# - name: install rsync on the ansible controller
+#   connection: local
+#   package:
+#     name: rsync
+#     state: present
+#     become: true
+#     become_user: root
+
+# - name: Copy files to remote host
+#   ansible.posix.synchronize:
+#     src: "service/"
+#     dest: "/home/{{local_user}}/{{service_directory}}/"
+
+- name: Copy files to remote host
+  ansible.builtin.copy:
+    src: "service/"
+    dest: "/home/{{local_user}}/{{service_directory}}/"
+    owner: "{{local_user}}"
+    group: "{{local_user}}"
+
+# - name: Give insecure permissions to an existing file
+#   ansible.builtin.file:
+#     path: "/home/{{local_user}}/{{service_directory}}/"
+#     owner: "{{local_user}}"
+#     group: "{{local_user}}"
+
+
+- name: "Template settings.py to config directory"
+  ansible.builtin.template:
+    src: settings.py
+    dest: "/home/{{local_user}}/{{service_directory}}/config/settings.py"
+    owner: "{{local_user}}"
+
+- name: "Template requirements.txt to config directory"
+  ansible.builtin.template:
+    src: requirements.txt
+    dest: "/home/{{local_user}}/requirements.txt"
+    owner: "{{local_user}}"

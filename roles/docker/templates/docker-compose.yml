@@ -1,0 +1,43 @@
+version: '3'
+
+services:
+  database:
+    image: {{database_image}}
+    volumes:
+      - db_data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME={{database_user}}
+      - MONGO_INITDB_ROOT_PASSWORD={{database_pass}}
+    networks:
+        "{{docker_network_name}}":
+          ipv4_address: {{internal_docker_ip}}
+    ports:
+      - '{{external_service_ip}}:{{external_database_port}}:27017'
+    restart: unless-stopped
+
+  backend:
+    depends_on:
+      - database
+    image: {{service_image_name}}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - '{{service_volume}}:/app'
+    ports:
+      - '{{external_service_ip}}:{{external_serice_port}}:50051'
+    networks:
+      - "{{docker_network_name}}"
+    restart: unless-stopped
+
+volumes:
+  db_data:
+  {{service_volume}}:
+
+networks:
+  "{{docker_network_name}}":
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: {{internal_docker_subnet}}

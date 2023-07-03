@@ -1,0 +1,8 @@
+- name: Create {{local_user}} user 
+  user:
+    name: "{{local_user}}"
+    groups: sudo
+    shell: /bin/bash
+    password: "{{local_pass | password_hash('sha512')}}"
+    state: present
+    create_home: true

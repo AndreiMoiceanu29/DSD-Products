@@ -1,0 +1,45 @@
+---
+
+- hosts: all
+  become: true
+  gather_facts: no
+  vars:
+    local_user: "acs_products"
+    local_pass: "local_pass="
+
+    application_name: "acs"
+    service_name: "products"
+    service_directory: "products"
+    service_image_name: acs/service-products
+    service_python_image: python:3.10-alpine
+    service_volume: "backend_data"
+
+    external_service_ip: 127.0.0.1
+    external_serice_port: 50060
+
+    docker_network_name: acs_network
+    internal_docker_subnet: 175.3.3.72/29
+    internal_docker_ip: 175.3.3.75
+
+    database_image: mongo:4.4
+    database_user: acs_products
+    database_pass: db_pass
+    database_port: 27017
+    external_database_port: 27026
+
+    secret_key: 'secret'
+
+  roles:
+  - role: 'roles/user'
+    tags: ['user_creation'] 
+
+
+  - role: 'roles/repository'
+    tags: ['repository']
+    become_user: "{{local_user}}"
+
+
+  - role: 'roles/docker'
+    tags: ['docker']
+
+
